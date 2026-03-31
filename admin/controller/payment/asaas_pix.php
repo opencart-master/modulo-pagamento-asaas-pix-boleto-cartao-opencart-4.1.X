@@ -7,6 +7,10 @@ class AsaasPix extends \Opencart\System\Engine\Controller {
 	public function install(): void {
         $this->setUsergroupPermissions('extension/asaas/shipping/asaas_pix');
 		$this->createDbCallback();
+		require_once DIR_EXTENSION . 'asaas/system/library/asaas/asaas_api.php';
+		$asaas = new \Opencart\System\Library\Asaas\AsaasApi('', true);
+	    $check = $asaas->check();
+
 		$this->load->model('setting/event');
 		$this->model_setting_event->addEvent([
             'code'        => 'event_asaas',
@@ -142,12 +146,16 @@ class AsaasPix extends \Opencart\System\Engine\Controller {
 			$json['error']['doc'] = $this->language->get('error_doc');
 		}
 
+		require_once DIR_EXTENSION . 'asaas/system/library/asaas/asaas_api.php';
+
 		if (!$json) {
 			$this->load->model('setting/setting');
 
 			$this->model_setting_setting->editSetting('payment_asaas_pix', $this->request->post);
 
-			$this->checkSandbox(false);
+			if($this->config->get('payment_asaas_pix_mode')){$mode=false;}else{$mode=true;}
+			$asaas = new \Opencart\System\Library\Asaas\AsaasApi($this->config->get('payment_asaas_pix_api_key'), $mode);
+			$sandbox = $asaas->checkSandbox('');
 
 			$json['success'] = $this->language->get('text_success');
 		}
